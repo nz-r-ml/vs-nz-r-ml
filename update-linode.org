@@ -1,0 +1,142 @@
+#+NAME: Updating linode for nz-r-ml
+
+
+
+* *Here* Run these snippets in org-mode
+  
+ #+begin_src emacs-lisp
+   (org-babel-do-load-languages 'org-babel-load-languages
+       '(
+           (shell . t)
+       )
+   )
+ #+end_src
+
+* TODO [6/6]Update portage
+** DONE Run headlessly - Get screen 
+   
+  #+begin_src sh
+    ssh root@172.104.66.228 <<EOF
+       	emerge app-misc/screen 
+    EOF
+  #+end_src
+
+  #+RESULTS:
+
+** DONE sync portage
+   M-x org-babel-execute-maybe
+  #+begin_src sh
+    ssh root@172.104.66.228 <<EOF & echo "asyncronously"
+      screen -S portage -d -m bash -c "emerge --sync"
+    EOF
+  #+end_src
+
+  #+RESULTS:
+  : asyncronously
+
+** DONE update Portage
+   M-x org-babel-execute-maybe
+   note "checking in" requires a functioning terminal
+   Take a peek at the screen.
+   ~watch screen -ls~
+  #+begin_src sh
+    ssh root@172.104.66.228 <<EOF & echo "asyncronously"
+      screen -S portage -d -m bash -c "emerge --oneshot portage"
+    EOF
+  #+end_src
+
+  #+RESULTS:
+  : asyncronously
+
+** DONE update world
+   
+  #+begin_src sh
+    ssh root@172.104.66.228 <<EOF & echo "asyncronously"
+      screen -S portage -d -m bash -c "emerge -vuDN --with-bdeps y --keep-going world"
+    EOF
+  #+end_src
+
+  #+RESULTS:
+  : asyncronously
+
+** DONE etc update
+   
+  #+begin_src sh
+    ssh root@172.104.66.228 <<EOF & echo "asyncronously"
+      screen -S portage -d -m bash -c "echo '-5' | etc-update"
+    EOF
+  #+end_src
+
+  #+RESULTS:
+  : asyncronously
+
+** DONE Clean dependencies
+   
+  #+begin_src sh
+    ssh root@172.104.66.228 <<EOF & echo "asyncronously"
+      screen -S portage -d -m bash -c "emerge -v --depclean"
+    EOF
+  #+end_src
+
+  #+RESULTS:
+  : asyncronously
+
+   did another ~echo '--5' | etc-update~
+
+* TODO [4/4] Set up emacs
+  ~emacs --daemon~
+  ~emacsclient --no-wait --eval '(progn (message "hi") (setq abc 123))'\~
+  ~package-install foo~
+
+** DONE Install emacs vcs
+   #+begin_src sh
+     ssh root@172.104.66.228 <<EOF
+	 screen -S portage -d -m bash -c "USE='libxml2' emerge app-editors/emacs-vcs --autounmask-write; echo '-5' | etc-update; USE='libxml2' emerge app-editors/emacs-vcs;"
+     EOF
+   #+end_src
+
+   #+RESULTS:
+
+** DONE Add package sources
+   #+begin_src sh
+     ssh root@172.104.66.228 <<EOF
+         mkdir ~/.emacs.d
+         echo "(require 'package)" > ~/.emacs.d/init.el
+         echo "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.milkbox.net/packages/\") t)" >> ~/.emacs.d/init.el
+         echo "(add-to-list 'package-archives '(\"org\" . \"https://orgmode.org/elpa/\") t)" >> ~/.emacs.d/init.el
+     EOF
+   #+end_src
+
+   #+RESULTS:
+
+** DONE Get some packages.
+   This doesn't work particularly well because the gpg key needs to be accepted. Then, org prefers to be portaged.
+   #+begin_src sh
+     ssh root@172.104.66.228 <<EOF
+     emacs --daemon;
+     EOF
+   #+end_src
+
+** DONE Get org-mode
+   #+begin_src sh
+     ssh root@172.104.66.228 <<EOF & echo 'async'
+     screen -S portage -d -m bash -c "emerge app-emacs/org-mode"
+     EOF
+   #+end_src
+
+   #+RESULTS:
+   : async
+
+* TODO Set up R
+  Did this manually in the end.
+   #+begin_src sh
+     ssh root@172.104.66.228 <<EOF & echo 'async'
+     screen -S portage -d -m bash -c "emerge dev-lang/R"
+     EOF
+   #+end_src
+
+   #+RESULTS:
+   : async
+
+  ~emerge --ask dev-lang/R~
+  ~emerge --ask app-emacs/ess~ - also done manually
